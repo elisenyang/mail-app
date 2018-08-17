@@ -1,1 +1,9 @@
+<script type="text/javascript" src="graph-js-sdk-web.js"></script>
+
 <h3>Home</h3>
+
+{{#if authenticated}}
+<a href="/logout">Logout</a>
+{{else}}
+<a href="/login">Login</a>
+{{/if}}
