@@ -22,24 +22,26 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 //authentication
-const authCallback = (iss, sub, profile, accessToken, refreshToken, done) => {
-    if (!profille.oid) {
-        return done(new Error("No oid found"), null)
+var callback = (iss, sub, profile, accessToken, refreshToken, done) => {
+    if (!profile.oid) {
+      return done(new Error("No oid found"), null);
     }
-
+  
     findByOid(profile.oid, function(err, user){
-        if (err) {
-            return done(err)
-        }
-        if (!user) {
-            users.push({profile, accessToken, refreshToken});
-            return done(null, profile)
-        }
-        return done(null, user)
-    })
-}
-
-passport.use(new OIDCStrategy(config.creds, authCallback));
+      if (err) {
+        return done(err);
+      }
+  
+      if (!user) {
+        users.push({profile, accessToken, refreshToken});
+        return done(null, profile);
+      }
+  
+      return done(null, user);
+    });
+  };
+  
+  passport.use(new OIDCStrategy(config.creds, callback))
 
 const users = [];
 
@@ -80,8 +82,6 @@ app.use(session({
 //routes
 app.get('/', function(req, res) {
     if (req.user) {
-        //var client = Microsoft
-        console.log("user", req.user)
         res.render('home', {
             authenticated: true
         })
@@ -91,14 +91,6 @@ app.get('/', function(req, res) {
         })
     }
 })
-
-app.post('/', function(req, res) {
-    console.log("USER", req.user)
-    res.render('home', {
-        authenticated: true
-    })
-})
-
 
 app.get('/login',
   function(req, res, next) {
@@ -112,10 +104,22 @@ app.get('/login',
     res.redirect('/');
 });
 
+app.post('/token',
+  function(req, res, next) {
+    passport.authenticate('azuread-openidconnect',
+      {
+        response: res,
+        failureRedirect: '/'
+      }
+    )(req, res, next);
+  },
+  function (req, res) {
+    res.redirect('/');
+  });
+
 app.get('/logout', function(req,res){
-    req.logOut(
+    req.logOut()
     res.redirect('/')
-    )
 })
 
 app.listen(port);
