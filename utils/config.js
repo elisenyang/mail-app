@@ -8,6 +8,6 @@ module.exports = {
         allowHttpForRedirectUrl: true,
         clientSecret: 'xpBR745#}+ydrzwOGCXF77{', //MOVE THIS LATER
         validateIssuer: false,
-        scope: ['User.Read', 'Mail.Read', 'Mail.ReadWrite',  'profile']
+        scope: ['User.Read', 'Mail.Read', 'Mail.ReadWrite', 'User.ReadWrite', 'profile']
     }
 };

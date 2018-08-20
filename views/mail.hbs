@@ -1,0 +1,10 @@
+<ul>
+    {{#each messages}}
+        <li>
+            <p>From: {{this.sender.emailAddress.name}}</p>
+            <p>Recieved: {{this.receivedDateTime}}</p>
+            <p>{{this.bodyPreview}}</p>
+            <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a>  <a href="/outlookRead/?id="{{this.id}}>Mark as Read</a>  <a href="/outlookFlag/?id="{{this.id}}>Flag</a> <a href="/outlookCreateReply/?id={{this.id}}">REPLY</a>
+        </li>
+    {{/each}}
+</ul>

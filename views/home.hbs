@@ -1,7 +1,9 @@
 <h3>Home</h3>
 
 {{#if authenticated}}
+<h2>Welcome, {{displayName}}</h2>
+<a href="/outlookMail">Outlook Mail</a>
 <a href="/logout">Logout</a>
 {{else}}
-<a href="/login">Login</a>
+<a href="/outlookLogin">Login with Outlook</a>
 {{/if}}

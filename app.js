@@ -10,6 +10,8 @@ const passport = require('passport');
 const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 const config = require('./utils/config.js');
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
+require('es6-promise').polyfill();
+const fetch = require('isomorphic-fetch');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -81,10 +83,32 @@ app.use(session({
 
 //routes
 app.get('/', function(req, res) {
-    if (req.user) {
-        res.render('home', {
-            authenticated: true
+    if (req.isAuthenticated()) {
+        var client = MicrosoftGraph.Client.init({
+            defaultVersion: 'v1.0',
+            debugLogging: true,
+            authProvider: function(authDone) {
+                authDone(null, req.user.accessToken)
+            }
         })
+
+        var store = {}
+
+        client.api('/me')
+            .get()
+            .then(() => {
+                return res.req.user.profile
+            }).then((profile)=> {
+                res.render('home', {
+                    authenticated: true,
+                    displayName: profile.displayName,
+                    })
+                return;
+            })
+            .catch(err => {
+                console.log(err)
+            })
+
     } else {
         res.render('home', {
             authenticated: false
@@ -92,7 +116,160 @@ app.get('/', function(req, res) {
     }
 })
 
-app.get('/login',
+
+app.get('/outlookMail', function(req,res) {
+    var client = MicrosoftGraph.Client.init({
+        defaultVersion: 'v1.0',
+        debugLogging: true,
+        authProvider: function(authDone) {
+            authDone(null, req.user.accessToken)
+        }
+    })
+
+    client.api('/me/messages?$filter=isRead eq false')
+        .get((err, resp) => {
+            //console.log(resp.value)
+            res.render('mail', {
+                authenticated: true,
+                messages: resp.value
+            })
+        })
+})
+
+
+app.get('/outlookDelete', function(req, res) {
+    var client = MicrosoftGraph.Client.init({
+        defaultVersion: 'v1.0',
+        debugLogging: true,
+        authProvider: function(authDone) {
+            authDone(null, req.user.accessToken)
+        }
+    })
+
+    client.api('/me/messages/'+req.query.id)
+        .delete((err, resp) =>{
+            if (err) {
+                console.log(err)
+                return;
+            }
+            res.redirect('/outlookMail')
+        })   
+})
+
+app.get('/outlookRead', function(req,res) { ///FIX THIS!!
+    // var client = MicrosoftGraph.Client.init({
+    //     defaultVersion: 'v1.0',
+    //     debugLogging: true,
+    //     authProvider: function(authDone) {
+    //         authDone(null, req.user.accessToken)
+    //     }
+    // })
+
+
+    // client.api('/me/messages/'+req.query.id)
+    //     .header("content-type", "application/json")
+    //     .patch({message: { isRead: true } }, (err,resp) => {
+    //         if (err) {
+    //             console.log(err)
+    //         }
+    //         console.log(resp)
+    //         res.redirect('/outlookMail')
+    //     })
+
+    fetch('https://graph.microsoft.com/v1.0/me/messages'+req.query.id, {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.accessToken
+        },
+        body: JSON.stringify({"isRead": "true"})
+    }).then((res) => {
+        return res.json()
+    }).then((resp) => {
+        console.log(resp)
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+app.get('/outlookFlag', function(req,res) { ///FIX THIS!!
+    // var client = MicrosoftGraph.Client.init({
+    //     defaultVersion: 'v1.0',
+    //     debugLogging: true,
+    //     authProvider: function(authDone) {
+    //         authDone(null, req.user.accessToken)
+    //     }
+    // })
+
+    // client.api('/me/messages/'+req.query.id)
+    //     .header("content-type", "application/json")
+    //     .patch({"flag": {"flagStatus": "flagged"}}, (err,resp) => {
+    //         if (err) {
+    //             console.log(err)
+    //         }
+    //         console.log(resp)
+    //         res.redirect('/outlookMail')
+    //     })
+
+    fetch('https://graph.microsoft.com/v1.0/me/messages'+req.query.id, {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.accessToken
+        },
+        body: JSON.stringify({"flag": {"flagStatus": "flagged"}})
+    }).then((res) => {
+        return res.json()
+    }).then((resp) => {
+        res.status(200)
+        console.log(resp)
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+app.get('/outlookReply', function(req,res) {
+    fetch('https://graph.microsoft.com/v1.0/me/messages/'+req.query.id, {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.accessToken
+        },
+        body: JSON.stringify({"body" : {
+            "content": "TESTING TESTING"
+        }})
+    }).then((resp) => {
+        return resp.json()
+    }).then((resp) => {
+        res.status(200)
+        console.log(resp)
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+app.get('/outlookCreateReply', function(req,res) {
+    fetch('https://graph.microsoft.com/v1.0/me/messages/'+req.query.id+'/createReply', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.accessToken
+        }
+    }).then((resp) => {
+        return resp.json()
+    }).then((resp) => {
+        res.status(200)
+        res.redirect('/outlookReply?id='+resp.id)
+        //console.log(resp)
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+
+
+
+app.get('/outlookLogin',
   function(req, res, next) {
     passport.authenticate('azuread-openidconnect',
     {
@@ -118,9 +295,15 @@ app.post('/token',
   });
 
 app.get('/logout', function(req,res){
-    req.logOut()
-    res.redirect('/')
+    users.splice(
+        users.findIndex((obj => obj.profile.oid == req.user.profile.oid)), 1);
+      req.session.destroy( (err) => {
+        req.logOut();
+      res.clearCookie('graphNodeCookie');
+      res.status(200);
+      res.redirect('/');
+      });
 })
 
 app.listen(port);
-console.log('Server started')
+console.log('Server started on localhost:3000')
