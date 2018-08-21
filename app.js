@@ -51,11 +51,11 @@ passport.serializeUser((user, done) => {
     done(null, user.oid);
   });
   
-  passport.deserializeUser((id, done) => {
+passport.deserializeUser((id, done) => {
     findByOid(id, function (err, user) {
-      done(err, user);
+        done(err, user);
     });
-  });
+});
   
   var findByOid = function(oid, fn) {
     for (var i = 0, len = users.length; i < len; i++) {
