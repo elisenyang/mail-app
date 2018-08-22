@@ -1,9 +1,32 @@
 <h3>Home</h3>
 
-{{#if authenticated}}
-<h2>Welcome, {{displayName}}</h2>
-<a href="/outlookMail">Outlook Mail</a>
-<a href="/logout">Logout</a>
+{{#if outlookAuth}}
+    <p>Accounts:<br/>
+        {{#each email}}
+            <span>{{this}}</span>
+        {{/each}}
+    </p>
+    <a href="/mail">Mail</a>
+    <a href="/auth/google">Sign In with Google</a>
+    <a href="/logout">Logout</a>
+{{else if googleAuth}}
+    <p>Accounts:<br/>
+        {{#each email}}
+            <span>{{this}}</span>
+        {{/each}}
+    </p>
+    <a href="/mail">Mail</a>
+    <a href="/outlookLogin">Sign In with Outlook</a>
+    <a href="/logout">Logout</a>
+{{else if bothAuth}}
+    <p>Accounts:<br/>
+        {{#each email}}
+            <span>{{this}}</span><br/>
+        {{/each}}
+    </p>
+    <a href="/mail">Mail</a>
+    <a href="/logout">Logout</a>
 {{else}}
-<a href="/outlookLogin">Login with Outlook</a>
+<a href="/outlookLogin">Sign In with Outlook</a>
+<a href="/auth/google">Sign In with Google</a>
 {{/if}}
