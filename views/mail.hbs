@@ -3,7 +3,7 @@
         {{#if this.outlook}}
         <li>
             <p>From: {{this.sender.emailAddress.name}}</p>
-            <p>Source: {{this.website}}</p>
+            <p>Source: Outlook</p>
             <p>Recieved: {{this.receivedDateTime}}</p>
             <p>{{this.bodyPreview}}</p>
             <form action="/outlookReply?id={{this.id}}" method="post">
@@ -14,13 +14,13 @@
         {{/if}}
         {{#if this.gmail}}
         <li>
-            <p>From: {{this.sender.emailAddress.name}}</p>
-            <p>Source: {{this.website}}</p>
+            <p>From: {{this.from}}</p>
+            <p>Source: Gmail</p>
             <p>Recieved: {{this.receivedDateTime}}</p>
             <p>{{this.snippet}}</p>
             <form action="/outlookReply?id={{this.id}}" method="post">
                 <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
-                <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a>  <a href="/outlookRead?id={{this.id}}">Mark as Read</a>  <a href="/outlookFlag?id={{this.id}}">Flag</a> 
+                <a method="post" href="/gmailDelete/?id={{this.id}}">Delete</a>  <a href="/gmailRead?id={{this.id}}">Mark as Read</a>  <a href="/outlookFlag?id={{this.id}}">Flag</a> 
             </form>
         </li>
         {{/if}}

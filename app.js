@@ -126,7 +126,6 @@ app.get('/', function(req, res) {
             }).then((res) => {
                 return res.json()
             }).then((resp) => {
-                console.log(resp)
                 res.render('home', {
                     outlookAuth: true,
                     bothAuth: false,
@@ -148,7 +147,6 @@ app.get('/', function(req, res) {
             }).then((res) => {
                 return res.json()
             }).then((resp) => {
-                console.log(resp)
                 res.render('home', {
                     outlookAuth: false,
                     bothAuth: false,
@@ -162,7 +160,6 @@ app.get('/', function(req, res) {
 
         //If signed in with both
         if (req.user.google && req.user.outlook) {
-            console.log('HERREE', req.user)
             fetch('https://graph.microsoft.com/v1.0/me', {
                 method: 'GET',
                 headers: {
@@ -212,7 +209,6 @@ app.get('/mail', function(req,res) {
         }).then((res) => {
             return res.json()
         }).then((resp) => {
-            console.log(resp)
             resp.value.forEach((mssg)=> {
                 mssg.outlook = true
             })
@@ -227,7 +223,6 @@ app.get('/mail', function(req,res) {
 
     //only Google
     if (req.user.google) {
-        console.log(req.user.googleProfile.id)
         fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages?q=is:unread', {
             method: 'GET',
             headers: {
@@ -240,7 +235,7 @@ app.get('/mail', function(req,res) {
 
             var fullMssgs = []
             const promises = resp.messages.map((message) => {
-               return fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+message.id+'?format=raw', {
+               return fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+message.id+'?format=full', {
                     method: 'GET',
                     headers: {
                         "Authorization": 'Bearer ' +req.user.googleToken
@@ -249,9 +244,14 @@ app.get('/mail', function(req,res) {
                     return res.json()
                 }).then((resp) => {
                     resp.gmail = true
+                    console.log(resp)
+                    for (var i=0; i < resp.payload.headers.length; i++) {
+                       if (resp.payload.headers[i].name === 'From') {
+                           resp.from = resp.payload.headers[i].value
+                       }
+                    }
                     fullMssgs.push(resp)
-
-                    return fullMssgs;
+                    return;
                 })
             })
 
@@ -287,6 +287,24 @@ app.get('/outlookDelete', function(req, res) {
         })   
 })
 
+app.get('/gmailDelete', function(req,res) {
+    console.log('IDDD',req.query.id)
+    fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'/trash', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.googleToken
+        }
+    }).then((res) => {
+        return res.json()
+    }).then((resp) => {
+        console.log('HEEREEE', resp)
+        res.redirect('/mail')
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
 app.get('/outlookRead', function(req,res) {
     fetch('https://graph.microsoft.com/v1.0/me/messages/'+req.query.id, {
         method: 'PATCH',
@@ -298,7 +316,27 @@ app.get('/outlookRead', function(req,res) {
     }).then((res) => {
         return res.json()
     }).then((resp) => {
-        res.status(200)
+        res.redirect('/mail')
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+app.get('/gmailRead', function(req,res) {
+    fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'/modify', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.googleToken
+        },
+        body: JSON.stringify({
+            "removeLabelIds": [
+              "UNREAD"
+            ]
+          })
+    }).then((res) => {
+        return res.json()
+    }).then((resp) => {
         res.redirect('/mail')
     }).catch( err=> {
         console.log(err)
@@ -369,7 +407,7 @@ app.post('/token',
 
 
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ["https://www.googleapis.com/auth/plus.me", "https://www.googleapis.com/auth/gmail.readonly"] }));
+  passport.authenticate('google', { scope: ["https://www.googleapis.com/auth/plus.me", "https://mail.google.com/"] }));
 
   app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/' }),
