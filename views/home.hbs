@@ -1,32 +1,35 @@
-<h3>Home</h3>
+<h2>Home</h2>
 
 {{#if outlookAuth}}
-    <p>Accounts:<br/>
-        {{#each email}}
-            <span>{{this}}</span>
-        {{/each}}
-    </p>
-    <a href="/mail">Mail</a>
-    <a href="/auth/google">Sign In with Google</a>
-    <a href="/logout">Logout</a>
-{{else if googleAuth}}
-    <p>Accounts:<br/>
-        {{#each email}}
-            <span>{{this}}</span>
-        {{/each}}
-    </p>
-    <a href="/mail">Mail</a>
-    <a href="/outlookLogin">Sign In with Outlook</a>
-    <a href="/logout">Logout</a>
-{{else if bothAuth}}
-    <p>Accounts:<br/>
+    <div><h3>Accounts:</h3>
         {{#each email}}
             <span>{{this}}</span><br/>
         {{/each}}
-    </p>
-    <a href="/mail">Mail</a>
-    <a href="/logout">Logout</a>
+    </div>
+    <div>
+        <button><a href="/mail">Mailbox</a></button>
+        <button><a href="/auth/google">Sign In with Google</a></button>
+    </div>
+{{else if googleAuth}}
+    <div><h3>Accounts:</h3>
+        {{#each email}}
+            <span>{{this}}</span><br/>
+        {{/each}}
+    </div>
+    <div>
+        <button><a href="/mail">Mailbox</a></button>
+        <button><a href="/outlookLogin">Sign In with Outlook</a></button>
+    </div>
+{{else if bothAuth}}
+    <div><h3>Accounts:</h3>
+        {{#each email}}
+            <span>{{this}}</span><br/>
+        {{/each}}
+    </div>
+    <div>
+        <button><a href="/mail">Mailbox</a></button>
+    </div>
 {{else}}
-<a href="/outlookLogin">Sign In with Outlook</a>
-<a href="/auth/google">Sign In with Google</a>
+    <button><a href="/outlookLogin">Sign In with Outlook</a></button>
+    <button><a href="/auth/google">Sign In with Google</a></button>
 {{/if}}

@@ -1,26 +1,32 @@
+<button><a href="/">Home</a></button>
+
+<h2>Unread Mail</h2>
+
 <ul>
     {{#each messages}}
         {{#if this.outlook}}
         <li>
-            <p>From: {{this.sender.emailAddress.name}}</p>
-            <p>Source: Outlook</p>
-            <p>Recieved: {{this.receivedDateTime}}</p>
+            <span>From: {{this.sender.emailAddress.name}}</span><br/>
+            <span>Source: Outlook</span></br>
+            <span>Recieved: {{this.date}}<span><br/>
+            <span>Subject: {{this.subject}}</span>
             <p>{{this.bodyPreview}}</p>
             <form action="/outlookReply?id={{this.id}}" method="post">
                 <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
-                <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a>  <a href="/outlookRead?id={{this.id}}">Mark as Read</a>  <a href="/outlookFlag?id={{this.id}}">Flag</a> 
+                <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a> | <a href="/outlookRead?id={{this.id}}">Mark as Read</a> | <a href="/outlookFlag?id={{this.id}}">Flag</a> 
             </form>
         </li>
         {{/if}}
         {{#if this.gmail}}
         <li>
-            <p>From: {{this.from}}</p>
-            <p>Source: Gmail</p>
-            <p>Recieved: {{this.receivedDateTime}}</p>
+            <span>From: {{this.from}}</span><br/>
+            <span>Source: Gmail</span><br/>
+            <span>Recieved: {{this.date}}</span><br/>
+            <span>Subject: {{this.subject}}</span>
             <p>{{this.snippet}}</p>
-            <form action="/outlookReply?id={{this.id}}" method="post">
+            <form action="/gmailReply?id={{this.messageId}}&threadId={{this.threadId}}" method="post">
                 <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
-                <a method="post" href="/gmailDelete/?id={{this.id}}">Delete</a>  <a href="/gmailRead?id={{this.id}}">Mark as Read</a>  <a href="/outlookFlag?id={{this.id}}">Flag</a> 
+                <a method="post" href="/gmailDelete/?id={{this.id}}">Delete</a> | <a href="/gmailRead?id={{this.id}}">Mark as Read</a> | <a href="/gmailFlag?id={{this.id}}">Flag</a> 
             </form>
         </li>
         {{/if}}

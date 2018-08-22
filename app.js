@@ -83,7 +83,12 @@ passport.use(new GoogleStrategy({
 }))
 
 passport.serializeUser((user, done) => { //NEED TO FIX
-    done(null, user.id)
+    if (user.id) {
+        done(null, user.id)
+    } else {
+        done(null, user.oid)
+    }
+    
   });
   
   passport.deserializeUser((id, done) => {
@@ -93,7 +98,7 @@ passport.serializeUser((user, done) => { //NEED TO FIX
   });
   
   var findByOid = function(oid, fn) {
-    if (users.length !== 0) {
+    if (users.length > 0) {
         return fn(null, users[0])
     }
     return fn(null, null);
@@ -198,9 +203,8 @@ app.get('/', function(req, res) {
 
 
 app.get('/mail', function(req,res) {
-
     //If only signed in with Outlook
-    if (req.user.outlook) {
+    if (req.user.outlook && !req.user.google) {
         fetch('https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false', {
             method: 'GET',
             headers: {
@@ -211,10 +215,14 @@ app.get('/mail', function(req,res) {
         }).then((resp) => {
             resp.value.forEach((mssg)=> {
                 mssg.outlook = true
+                mssg.formattedDate = new Date(mssg.receivedDateTime)
+            })
+            var allMessages = resp.value.sort(function(a,b) {
+                return new Date(b.date) - new Date(a.date)
             })
             res.render('mail', {
                 authenticated: true,
-                messages: resp.value
+                messages: allMessages
             })
         }).catch( err=> {
             console.log(err)
@@ -222,7 +230,7 @@ app.get('/mail', function(req,res) {
     }
 
     //only Google
-    if (req.user.google) {
+    if (req.user.google && !req.user.outlook) {
         fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages?q=is:unread', {
             method: 'GET',
             headers: {
@@ -244,11 +252,92 @@ app.get('/mail', function(req,res) {
                     return res.json()
                 }).then((resp) => {
                     resp.gmail = true
-                    console.log(resp)
                     for (var i=0; i < resp.payload.headers.length; i++) {
                        if (resp.payload.headers[i].name === 'From') {
                            resp.from = resp.payload.headers[i].value
                        }
+                       if (resp.payload.headers[i].name === 'Date') {
+                        resp.date = resp.payload.headers[i].value
+                        }
+                        if (resp.payload.headers[i].name === 'Subject') {
+                            resp.subject = resp.payload.headers[i].value
+                        }
+                    }
+                    resp.threadId = message.threadId
+                    resp.messageId = message.id
+                    fullMssgs.push(resp)
+                    return;
+                })
+            })
+
+            Promise.all(promises).then(()=> {
+                var allMessages = fullMssgs.sort(function(a,b) {
+                    return new Date(b.date) - new Date(a.date)
+                })
+                res.render('mail', {
+                    authenticated: true,
+                    messages: allMessages
+                })
+            })
+        }).catch( err=> {
+            console.log(err)
+        })
+    }
+
+    //both
+    if (req.user.google && req.user.outlook) {
+        const promiseO =  fetch('https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false', {
+            method: 'GET',
+            headers: {
+                "Authorization": 'Bearer ' +req.user.outlookToken
+            }
+        }).then((res) => {
+            return res.json()
+        }).then((resp) => {
+            resp.value.forEach((mssg)=> {
+                mssg.outlook = true
+                mssg.date = new Date(mssg.receivedDateTime)
+            })
+            return resp;
+        }).catch( err=> {
+            console.log(err)
+        })
+
+        const promiseG = fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages?q=is:unread', {
+            method: 'GET',
+            headers: {
+                "Authorization": 'Bearer ' +req.user.googleToken
+            }
+        }).then((res) => {
+            return res.json()
+        }).then((resp) => {
+            return resp
+        }).catch( err=> {
+            console.log(err)
+        })
+
+        Promise.all([promiseO, promiseG]).then((response) => {
+            var fullMssgs = []
+            const promises = response[1].messages.map((message) => {
+               return fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+message.id+'?format=full', {
+                    method: 'GET',
+                    headers: {
+                        "Authorization": 'Bearer ' +req.user.googleToken
+                    }
+                }).then((res)=> {
+                    return res.json()
+                }).then((resp) => {
+                    resp.gmail = true
+                    for (var i=0; i < resp.payload.headers.length; i++) {
+                       if (resp.payload.headers[i].name === 'From') {
+                           resp.from = resp.payload.headers[i].value
+                       }
+                       if (resp.payload.headers[i].name === 'Date') {
+                        resp.date = new Date(resp.payload.headers[i].value)
+                        }
+                        if (resp.payload.headers[i].name === 'Subject') {
+                            resp.subject = resp.payload.headers[i].value
+                        }
                     }
                     fullMssgs.push(resp)
                     return;
@@ -256,14 +345,21 @@ app.get('/mail', function(req,res) {
             })
 
             Promise.all(promises).then(()=> {
+                const allMessages = [...response[0].value, ...fullMssgs]
+                allMessages.sort(function(a,b) {
+                    return new Date(b.date) - new Date(a.date)
+                })
                 res.render('mail', {
                     authenticated: true,
-                    messages: fullMssgs
+                    messages: allMessages
                 })
             })
-        }).catch( err=> {
-            console.log(err)
+
         })
+    }
+
+    if (!req.user.google && !req.user.outlook) {
+        res.redirect('/')
     }
 })
 
@@ -288,7 +384,6 @@ app.get('/outlookDelete', function(req, res) {
 })
 
 app.get('/gmailDelete', function(req,res) {
-    console.log('IDDD',req.query.id)
     fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'/trash', {
         method: 'POST',
         headers: {
@@ -298,7 +393,6 @@ app.get('/gmailDelete', function(req,res) {
     }).then((res) => {
         return res.json()
     }).then((resp) => {
-        console.log('HEEREEE', resp)
         res.redirect('/mail')
     }).catch( err=> {
         console.log(err)
@@ -357,7 +451,31 @@ app.get('/outlookFlag', function(req,res) {
     }).then((res) => {
         return res.json()
     }).then((resp) => {
-        res.status(200)
+        res.redirect('/mail')
+    }).catch( err=> {
+        console.log(err)
+    })
+})
+
+
+app.get('/gmailFlag', function(req,res) {
+    fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'/modify', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": 'Bearer ' +req.user.googleToken
+        },
+        body: JSON.stringify({
+            "addLabelIds": [
+              "STARRED"
+            ],
+            "removeLabelIds": [
+                "UNREAD"
+            ]
+          })
+    }).then((res) => {
+        return res.json()
+    }).then((resp) => {
         res.redirect('/mail')
     }).catch( err=> {
         console.log(err)
@@ -379,28 +497,95 @@ app.post('/outlookReply', function(req,res) {
     })
 })
 
+app.post('/gmailReply', function(req, res) {
+    fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'?format=full', {
+        method: 'GET',
+        headers: {
+            "Authorization": 'Bearer ' +req.user.googleToken
+        }
+    }).then((res)=> {
+        return res.json()
+    }).then((resp) => {
+        for (var i=0; i < resp.payload.headers.length; i++) {
+            if (resp.payload.headers[i].name === 'From') {
+                resp.from = resp.payload.headers[i].value
+            }
+            if (resp.payload.headers[i].name === 'Date') {
+                resp.date = new Date(resp.payload.headers[i].value)
+            }
+            if (resp.payload.headers[i].name === 'Subject') {
+                resp.subject = resp.payload.headers[i].value
+            }
+            if (resp.payload.headers[i].name === 'To') {
+                resp.to = resp.payload.headers[i].value
+            }
+        }
+        return resp
+    }).then((resp) => {
+        const encodedResponse  = Buffer.from(
+            "Content-Type: text/plain; charset=\"UTF-8\"\n" +
+            "MIME-Version: 1.0\n" +
+            "Content-Transfer-Encoding: 7bit\n" +
+            "Subject: "+resp.subject+"\n" +
+            "From: "+resp.to+"\n" +
+            "To: "+resp.from+"\n" +
+            "In-Reply-To: "+resp.from+ "\n"+
+            "References: "+resp.id+"\n\n" +
+          
+            req.body.replyMessage
+          , 'binary').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+          var prom1 = fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/send', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer ' +req.user.googleToken
+            }, 
+            body: JSON.stringify({
+                    raw: encodedResponse,
+                    threadId: resp.threadId 
+                })
+
+            }).then(()=> {
+                return;
+            }).catch(err => {
+                console.log(err)
+            })
+
+            var prom2 = fetch('https://www.googleapis.com/gmail/v1/users/'+req.user.googleProfile.id+'/messages/'+req.query.id+'/modify', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                        "Authorization": 'Bearer ' +req.user.googleToken
+                },
+                body: JSON.stringify({
+                        "removeLabelIds": [
+                          "UNREAD"]
+                })
+                }).then((res) => {
+                    return
+                }).catch( err=> {
+                    console.log(err)
+                })
+            
+            Promise.all([prom1, prom2]).then(()=> {
+                res.redirect('/mail')
+            })
+
+
+    }).catch(err => {
+        console.log(err)
+    })
+})
+
 
 app.get('/outlookLogin',
-  function(req, res, next) {
-    passport.authenticate('azuread-openidconnect',
-    {
-      response: res,
-      failureRedirect: '/'
-    })(req, res, next);
-  },
-  function (req, res) {
-    res.redirect('/');
-});
+    passport.authenticate('azuread-openidconnect', {failureRedirect: '/'})
+);
 
 app.post('/token',
-  function(req, res, next) {
-    passport.authenticate('azuread-openidconnect',
-      {
-        response: res,
-        failureRedirect: '/'
-      }
-    )(req, res, next);
-  },
+    passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }
+    ),
   function (req, res) {
     res.redirect('/');
   });
@@ -409,22 +594,22 @@ app.post('/token',
 app.get('/auth/google',
   passport.authenticate('google', { scope: ["https://www.googleapis.com/auth/plus.me", "https://mail.google.com/"] }));
 
-  app.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/' }),
+app.get('/auth/google/callback', 
+passport.authenticate('google', { failureRedirect: '/' }),
   function(req, res) {
     res.redirect('/');
-  });
+});
 
-app.get('/logout', function(req,res){
-    users.splice(
-        users.findIndex((obj => obj.profile.oid == req.user.profile.oid)), 1);
-      req.session.destroy( (err) => {
-        req.logOut();
-      res.clearCookie('graphNodeCookie');
-      res.status(200);
-      res.redirect('/');
-      });
-})
+// app.get('/logout', function(req,res){
+//     users.splice(
+//         users.findIndex((obj => obj.profile.oid == req.user.profile.oid)), 1);
+//       req.session.destroy( () => {
+//           req.logOut();
+//           res.clearCookie('graphNodeCookie');
+//           res.status(200);
+//           res.redirect('/');
+//       });
+// })
 
 app.listen(port);
 console.log('Server started on localhost:3000')
