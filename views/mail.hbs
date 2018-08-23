@@ -1,34 +1,75 @@
-<button><a href="/">Home</a></button>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<h2>Unread Mail</h2>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  </head>
+  <body>
 
-<ul>
-    {{#each messages}}
-        {{#if this.outlook}}
-        <li>
-            <span>From: {{this.sender.emailAddress.name}}</span><br/>
-            <span>Source: Outlook</span></br>
-            <span>Recieved: {{this.date}}<span><br/>
-            <span>Subject: {{this.subject}}</span>
-            <p>{{this.bodyPreview}}</p>
-            <form action="/outlookReply?id={{this.id}}" method="post">
-                <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
-                <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a> | <a href="/outlookRead?id={{this.id}}">Mark as Read</a> | <a href="/outlookFlag?id={{this.id}}">Flag</a> 
-            </form>
-        </li>
-        {{/if}}
-        {{#if this.gmail}}
-        <li>
-            <span>From: {{this.from}}</span><br/>
-            <span>Source: Gmail</span><br/>
-            <span>Recieved: {{this.date}}</span><br/>
-            <span>Subject: {{this.subject}}</span>
-            <p>{{this.snippet}}</p>
-            <form action="/gmailReply?id={{this.messageId}}&threadId={{this.threadId}}" method="post">
-                <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
-                <a method="post" href="/gmailDelete/?id={{this.id}}">Delete</a> | <a href="/gmailRead?id={{this.id}}">Mark as Read</a> | <a href="/gmailFlag?id={{this.id}}">Flag</a> 
-            </form>
-        </li>
-        {{/if}}
-    {{/each}}
-</ul>
+    <button type="button" class="btn btn-secondary"><a href="/">Home</a></button>
+
+    <h2>Unread Mail</h2>
+
+    <ul class="list-group">
+        {{#each messages}}
+            {{#if this.outlook}}
+            <li class="list-group-item">
+                <div class="col-12">
+                    <span>From: {{this.sender.emailAddress.name}}</span>
+                </div>
+                <div class="col-12">
+                    <span>Source: Outlook</span>
+                </div>
+                <div class="col-12">
+                    <span>Recieved: {{this.date}}<span>
+                </div>
+                <div class="col-12">
+                <span>Subject: {{this.subject}}</span>
+                </div>
+                <div class="col-12">
+                    <p>{{this.bodyPreview}}</p>
+                </div>
+                <div class="col-12">
+                    <form action="/outlookReply?id={{this.id}}" method="post">
+                        <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
+                        <a method="post" href="/outlookDelete/?id={{this.id}}">Delete</a> | <a href="/outlookRead?id={{this.id}}">Mark as Read</a> | <a href="/outlookFlag?id={{this.id}}">Flag</a> 
+                    </form>
+                </div>
+            </li>
+            {{/if}}
+            {{#if this.gmail}}
+            <li class="list-group-item">
+                <div class="col-12">
+                    <span>From: {{this.from}}</span>
+                </div>
+                <div class="col-12">
+                    <span>Source: Gmail</span>
+                </div>
+                <div class="col-12">
+                    <span>Recieved: {{this.date}}</span>
+                </div>
+                <div class="col-12">
+                    <span>Subject: {{this.subject}}</span>
+                </div>
+                <div class="col-12">
+                    <p>{{this.snippet}}</p>
+                </div>
+                <div class="col-12">
+                    <form action="/gmailReply?id={{this.messageId}}&threadId={{this.threadId}}" method="post">
+                        <label>Reply:</label><br/><input type="text" name="replyMessage" value="Type your reply here"> <input type="submit" value="Send"><br/>
+                        <a method="post" href="/gmailDelete/?id={{this.id}}">Delete</a> | <a href="/gmailRead?id={{this.id}}">Mark as Read</a> | <a href="/gmailFlag?id={{this.id}}">Flag</a> 
+                    </form>
+                </div>
+            </li>
+            {{/if}}
+        {{/each}}
+    </ul>
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  </body>
+</html>

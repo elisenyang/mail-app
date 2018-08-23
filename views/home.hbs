@@ -1,35 +1,52 @@
-<h2>Home</h2>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-{{#if outlookAuth}}
-    <div><h3>Accounts:</h3>
-        {{#each email}}
-            <span>{{this}}</span><br/>
-        {{/each}}
-    </div>
-    <div>
-        <button><a href="/mail">Mailbox</a></button>
-        <button><a href="/auth/google">Sign In with Google</a></button>
-    </div>
-{{else if googleAuth}}
-    <div><h3>Accounts:</h3>
-        {{#each email}}
-            <span>{{this}}</span><br/>
-        {{/each}}
-    </div>
-    <div>
-        <button><a href="/mail">Mailbox</a></button>
-        <button><a href="/outlookLogin">Sign In with Outlook</a></button>
-    </div>
-{{else if bothAuth}}
-    <div><h3>Accounts:</h3>
-        {{#each email}}
-            <span>{{this}}</span><br/>
-        {{/each}}
-    </div>
-    <div>
-        <button><a href="/mail">Mailbox</a></button>
-    </div>
-{{else}}
-    <button><a href="/outlookLogin">Sign In with Outlook</a></button>
-    <button><a href="/auth/google">Sign In with Google</a></button>
-{{/if}}
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  </head>
+  <body>
+
+    <h2>Home</h2>
+
+    {{#if outlookAuth}}
+        <div><h4>Accounts:</h4>
+            {{#each email}}
+                <span>{{this}}</span><br/>
+            {{/each}}
+        </div>
+        <div>
+            <button type="button" class="btn btn-secondary"><a href="/mail">Mailbox</a></button>
+            <button type="button" class="btn btn-secondary"><a href="/auth/google">Sign In with Google</a></button>
+        </div>
+    {{else if googleAuth}}
+        <div><h4>Accounts:</h4>
+            {{#each email}}
+                <span>{{this}}</span><br/>
+            {{/each}}
+        </div>
+        <div>
+            <button type="button" class="btn btn-secondary"><a href="/mail">Mailbox</a></button>
+            <button type="button" class="btn btn-secondary"><a href="/outlookLogin">Sign In with Outlook</a></button>
+        </div>
+    {{else if bothAuth}}
+        <div><h4>Accounts:</h4>
+            {{#each email}}
+                <span>{{this}}</span><br/>
+            {{/each}}
+        </div>
+        <div>
+            <button type="button" class="btn btn-secondary"><a href="/mail">Mailbox</a></button>
+        </div>
+    {{else}}
+        <button type="button" class="btn btn-secondary"><a href="/outlookLogin">Sign In with Outlook</a></button>
+        <button type="button" class="btn btn-secondary"><a href="/auth/google">Sign In with Google</a></button>
+    {{/if}}
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  </body>
+</html>
