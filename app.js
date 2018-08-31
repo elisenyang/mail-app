@@ -199,6 +199,8 @@ app.get('/', function(req, res) {
             authenticated: false
         })
     }
+
+    console.log("USER", req.user)
 })
 
 
@@ -239,7 +241,7 @@ app.get('/mail', function(req,res) {
         }).then((res) => {
             return res.json()
         }).then((resp) => {
-
+            console.log(req.user.googleProfile.id, resp)
 
             var fullMssgs = []
             const promises = resp.messages.map((message) => {
@@ -339,6 +341,7 @@ app.get('/mail', function(req,res) {
                             resp.subject = resp.payload.headers[i].value
                         }
                     }
+                    resp.messageId = message.id
                     fullMssgs.push(resp)
                     return;
                 })
