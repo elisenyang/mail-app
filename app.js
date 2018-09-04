@@ -199,8 +199,6 @@ app.get('/', function(req, res) {
             authenticated: false
         })
     }
-
-    console.log("USER", req.user)
 })
 
 
@@ -217,7 +215,7 @@ app.get('/mail', function(req,res) {
         }).then((resp) => {
             resp.value.forEach((mssg)=> {
                 mssg.outlook = true
-                mssg.formattedDate = new Date(mssg.receivedDateTime)
+                mssg.date = new Date(mssg.receivedDateTime)
             })
             var allMessages = resp.value.sort(function(a,b) {
                 return new Date(b.date) - new Date(a.date)
@@ -531,9 +529,7 @@ app.post('/gmailReply', function(req, res) {
             "Content-Transfer-Encoding: 7bit\n" +
             "Subject: "+resp.subject+"\n" +
             "From: "+resp.to+"\n" +
-            "To: "+resp.from+"\n" +
-            "In-Reply-To: "+resp.from+ "\n"+
-            "References: "+resp.id+"\n\n" +
+            "To: "+resp.from+"\n\n" +
           
             req.body.replyMessage
           , 'binary').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
